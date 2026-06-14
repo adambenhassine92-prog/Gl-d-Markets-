@@ -133,7 +133,7 @@ export default function Page(){
 
   const sectors=useMemo(()=>{ const m={};
     ALL.forEach(s=>{ (m[s.s]=m[s.s]||[]).push(s); });
-    return Object.entries(m).map(([k,v])=>({s:k,n:v.length})).sort((a,b)=>b.n-a.n);
+    return Object.entries(m).map(([k,v])=>({s:k,n:v.length,logos:v.slice(0,4).map(x=>({t:x.t,d:x.d}))})).sort((a,b)=>b.n-a.n);
   },[]);
 
   async function loadQuotes(items){
@@ -258,11 +258,15 @@ export default function Page(){
         .seg button{background:var(--panel);border:none;color:var(--mut);padding:9px 15px;font-size:13px;cursor:pointer;font-family:inherit;transition:.18s;}
         .seg button.act{background:var(--gold);color:#1a1305;font-weight:600;}
         .secgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
-        .secbar{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:border-color .2s,transform .2s,background .2s;}
-        .secbar:hover{border-color:rgba(245,166,35,.5);transform:translateY(-3px);}
+        .secbar{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:18px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;}
+        .secbar:hover{border-color:rgba(245,166,35,.5);transform:translateY(-4px);box-shadow:0 16px 36px -22px rgba(0,0,0,.9);}
         .secbar .nm{font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center;}
-        .secbar .arr{color:var(--gold);}
+        .secbar .arr{color:var(--gold);transition:transform .2s;}
+        .secbar:hover .arr{transform:translateX(4px);}
         .secbar .cnt{font-size:12px;color:var(--mut);margin-top:6px;}
+        .seclogos{display:flex;margin-top:14px;}
+        .seclogos .logo{width:28px;height:28px;border-radius:8px;margin-right:-8px;border:2px solid var(--panel);box-shadow:0 2px 8px rgba(0,0,0,.5);}
+        .seclogos .logo:last-child{margin-right:0;}
         .backbtn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:9px 15px;border-radius:11px;cursor:pointer;font-size:13px;font-family:inherit;margin-bottom:18px;}
         .backbtn:hover{color:var(--gold);border-color:var(--gold);}
         .sectorhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
@@ -380,6 +384,7 @@ export default function Page(){
                   <div className="secbar" onClick={()=>openSector(x.s)}>
                     <div className="nm">{x.s} <span className="arr">→</span></div>
                     <div className="cnt">{x.n} {x.s==="Krypto"?"coins":"aktier"}</div>
+                    <div className="seclogos">{x.logos.map(g=><Logo key={g.t} t={g.t} d={g.d} size={26}/>)}</div>
                   </div>
                 </Reveal>
               ))}
