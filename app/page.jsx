@@ -108,6 +108,7 @@ export default function Page(){
   const [progress,setProgress]=useState(0);
   const [clock,setClock]=useState(null);
   const [tape,setTape]=useState([]);
+  const [marketNews,setMarketNews]=useState(null);
 
   useEffect(()=>{ setClock(new Date()); const id=setInterval(()=>setClock(new Date()),1000); return ()=>clearInterval(id); },[]);
   useEffect(()=>{
@@ -128,6 +129,13 @@ export default function Page(){
         if(j&&j.quotes) coinSyms.forEach(s=>{ if(j.quotes[s]) out.push({t:s,...j.quotes[s]}); }); }catch(e){}
       if(alive && out.length) setTape(out);
     })();
+    return ()=>{ alive=false; };
+  },[]);
+
+  useEffect(()=>{
+    let alive=true;
+    fetch(`/api/marketnews`,{cache:"no-store"}).then(r=>r.json())
+      .then(j=>{ if(alive) setMarketNews(j.news||[]); }).catch(()=>{ if(alive) setMarketNews([]); });
     return ()=>{ alive=false; };
   },[]);
 
@@ -252,7 +260,7 @@ export default function Page(){
         .bigsearch input:focus{border-color:var(--gold);}
         .sec{max-width:1180px;margin:0 auto;padding:24px 22px 40px;}
         .sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
-        .sec-t{font-family:'Sora';font-weight:700;font-size:22px;letter-spacing:-.4px;}
+        .sec-t{font-family:'Sora';font-weight:700;font-size:22px;letter-spacing:-.4px;display:flex;align-items:center;gap:10px;}
         .sec-d{color:var(--mut);font-size:13px;margin-top:4px;}
         .seg{display:flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;}
         .seg button{background:var(--panel);border:none;color:var(--mut);padding:9px 15px;font-size:13px;cursor:pointer;font-family:inherit;transition:.18s;}
@@ -267,6 +275,16 @@ export default function Page(){
         .seclogos{display:flex;margin-top:14px;}
         .seclogos .logo{width:28px;height:28px;border-radius:8px;margin-right:-8px;border:2px solid var(--panel);box-shadow:0 2px 8px rgba(0,0,0,.5);}
         .seclogos .logo:last-child{margin-right:0;}
+        .newsrow{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+        .newsrow::-webkit-scrollbar{height:0;}
+        .newscard{flex:0 0 270px;scroll-snap-align:start;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .25s,border-color .25s;display:flex;flex-direction:column;}
+        .newscard:hover{transform:translateY(-4px);border-color:rgba(245,166,35,.45);}
+        .newsimg{height:130px;background-size:cover;background-position:center;background-color:var(--panel2);}
+        .newsimg.ph{background:linear-gradient(135deg,rgba(245,166,35,.18),rgba(38,208,124,.08));}
+        .newsbody{padding:13px 14px 15px;display:flex;flex-direction:column;gap:7px;flex:1;}
+        .newstag{align-self:flex-start;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);padding:3px 8px;border-radius:20px;}
+        .newsh{font-size:14px;font-weight:600;line-height:1.35;color:var(--txt);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+        .newsmeta{font-size:11.5px;color:var(--mut);margin-top:auto;}
         .backbtn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:9px 15px;border-radius:11px;cursor:pointer;font-size:13px;font-family:inherit;margin-bottom:18px;}
         .backbtn:hover{color:var(--gold);border-color:var(--gold);}
         .sectorhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
@@ -375,6 +393,24 @@ export default function Page(){
               </div>
             </div>
           </section>
+
+          {marketNews && marketNews.length>0 && (
+            <section className="sec">
+              <Reveal><div className="sec-h"><div><div className="sec-t">Markedsnyheder <span className="liveb">LIVE</span></div><div className="sec-d">Seneste nyt fra aktie- og kryptomarkederne</div></div></div></Reveal>
+              <div className="newsrow">
+                {marketNews.map((n,i)=>(
+                  <a className="newscard" key={i} href={n.url} target="_blank" rel="noreferrer">
+                    {n.img ? <div className="newsimg" style={{backgroundImage:`url(${n.img})`}}/> : <div className="newsimg ph"/>}
+                    <div className="newsbody">
+                      <span className="newstag">{n.cat}</span>
+                      <div className="newsh">{n.h}</div>
+                      <div className="newsmeta">{n.src}{n.dt?` · ${ago(n.dt)} siden`:""}</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="sec">
             <Reveal><div className="sec-h"><div><div className="sec-t">Sektorer</div><div className="sec-d">Tryk for at åbne en sektor med live priser</div></div></div></Reveal>
