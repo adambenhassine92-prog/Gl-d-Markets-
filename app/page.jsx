@@ -107,6 +107,7 @@ export default function Page(){
   const [loading,setLoading]=useState(false);
   const [progress,setProgress]=useState(0);
   const [clock,setClock]=useState(null);
+  const [tape,setTape]=useState([]);
 
   useEffect(()=>{ setClock(new Date()); const id=setInterval(()=>setClock(new Date()),1000); return ()=>clearInterval(id); },[]);
   useEffect(()=>{
@@ -114,6 +115,21 @@ export default function Page(){
     window.addEventListener("scroll",onScroll,{passive:true}); return ()=>window.removeEventListener("scroll",onScroll);
   },[]);
   useEffect(()=>{ const onKey=(e)=>{ if(e.key==="Escape") setSel(null); }; window.addEventListener("keydown",onKey); return ()=>window.removeEventListener("keydown",onKey); },[]);
+
+  useEffect(()=>{
+    const stockSyms=["NVDA","AAPL","TSLA","MSFT","AMZN","GOOGL","META","AMD","SPCX","COIN"];
+    const coinSyms=["BTC","ETH","SOL","HYPE"];
+    let alive=true;
+    (async()=>{
+      const out=[];
+      try{ const r=await fetch(`/api/quote?symbols=${stockSyms.join(",")}`,{cache:"no-store"}); const j=await r.json();
+        if(j&&j.quotes) stockSyms.forEach(s=>{ if(j.quotes[s]) out.push({t:s,...j.quotes[s]}); }); }catch(e){}
+      try{ const r=await fetch(`/api/crypto`,{cache:"no-store"}); const j=await r.json();
+        if(j&&j.quotes) coinSyms.forEach(s=>{ if(j.quotes[s]) out.push({t:s,...j.quotes[s]}); }); }catch(e){}
+      if(alive && out.length) setTape(out);
+    })();
+    return ()=>{ alive=false; };
+  },[]);
 
   const sectors=useMemo(()=>{ const m={};
     ALL.forEach(s=>{ (m[s.s]=m[s.s]||[]).push(s); });
@@ -201,6 +217,12 @@ export default function Page(){
         .reveal.in{opacity:1;transform:none;}
         @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}
         .prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:60;box-shadow:0 0 10px rgba(245,166,35,.6);}
+        .tape{background:rgba(8,10,15,.92);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;}
+        .tape-track{display:inline-flex;gap:30px;padding:9px 0;animation:tape 38s linear infinite;will-change:transform;}
+        .tape:hover .tape-track{animation-play-state:paused;}
+        .tape-item{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--mut);padding-left:30px;}
+        .tape-item b{color:var(--txt);font-family:'JetBrains Mono';font-weight:700;}
+        @keyframes tape{from{transform:translateX(0)}to{transform:translateX(-50%)}}
         .nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:rgba(8,10,15,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
         .brand{display:flex;align-items:center;gap:10px;cursor:pointer;}
         .gdot{width:11px;height:11px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px 2px rgba(245,166,35,.75);}
@@ -313,9 +335,19 @@ export default function Page(){
         </div>
       </div>
 
+      {tape.length>0 && (
+        <div className="tape">
+          <div className="tape-track">
+            {[...tape,...tape].map((x,i)=>(
+              <span className="tape-item" key={i}><b>{x.t}</b> <span className="mono">{fmtP(x.p)}</span> <span className={x.c>=0?"up":"down"}>{x.c>=0?"▲":"▼"}{Math.abs(x.c).toFixed(2)}%</span></span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!showingList ? (
         <>
-                 <section className="hero">
+          <section className="hero">
             <div className="hero-bg"><div className="grid-lines"/></div>
             <div className="hero-in">
               <div className="eyebrow">Markedsintelligens · Realtid</div>
@@ -339,7 +371,6 @@ export default function Page(){
               </div>
             </div>
           </section>
-
 
           <section className="sec">
             <Reveal><div className="sec-h"><div><div className="sec-t">Sektorer</div><div className="sec-d">Tryk for at åbne en sektor med live priser</div></div></div></Reveal>
@@ -383,7 +414,6 @@ export default function Page(){
         <div style={{marginTop:16,opacity:.7}}>© {clock?clock.getFullYear():2026} GLØD MARKETS · Hjemmeside udviklet af Adam Mehdi Ben Hassine</div>
       </footer>
 
-
       {selEff && (
         <div className="ov" onClick={()=>setSel(null)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -399,7 +429,7 @@ export default function Page(){
               </div>
               <ChartBox points={hist} loading={histLoading} kind={selEff.coin?"coin":"stock"} range={histRange} onRange={setHistRange}/>
               <div className="mnews-t">{selEff.coin?"Om":"Seneste nyheder"} {modalNews && modalNews.length>0 && <span className="liveb">LIVE</span>}</div>
-              {selEff.coin && <div className="nm2" style={{color:"var(--mut)",fontSize:13}}>Live pris i USD med 24-timers ændring via CoinGecko.</div>}
+              {selEff.coin && <div className="nm2" style={{color:"var(--mut)",fontSize:13}}>Live pris i USD med ændring over de seneste 24 timer.</div>}
               {!selEff.coin && !modalNews && <div className="nm2" style={{color:"var(--mut)",fontSize:13}}>Henter nyheder…</div>}
               {!selEff.coin && modalNews && modalNews.length===0 && <div className="nm2" style={{color:"var(--mut)",fontSize:13}}>Ingen nyheder lige nu.</div>}
               {!selEff.coin && (modalNews||[]).map((nw,i)=>{
