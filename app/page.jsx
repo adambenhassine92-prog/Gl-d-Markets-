@@ -113,6 +113,8 @@ export default function Page(){
   const [chatMsgs,setChatMsgs]=useState([{role:"assistant",content:"Hej! Jeg er GLØD AI 🤖 Spørg mig om en aktie eller coin — fx \"Hvad er Nvidia, og hvad er deres plan?\" eller \"Forklar Bitcoin\"."}]);
   const [chatInput,setChatInput]=useState("");
   const [chatLoading,setChatLoading]=useState(false);
+  const [info,setInfo]=useState(null);
+  const [infoLoading,setInfoLoading]=useState(false);
 
   useEffect(()=>{ setClock(new Date()); const id=setInterval(()=>setClock(new Date()),1000); return ()=>clearInterval(id); },[]);
   useEffect(()=>{
@@ -198,6 +200,16 @@ export default function Page(){
       .catch(()=>{ if(alive){ setHist([]); setHistLoading(false); } });
     return ()=>{ alive=false; };
   },[sel,histRange]);
+
+  useEffect(()=>{
+    if(!sel){ setInfo(null); return; }
+    let alive=true; setInfo(null); setInfoLoading(true);
+    const url = sel.coin ? `/api/info?kind=coin&id=${encodeURIComponent(sel.id||"")}`
+                         : `/api/info?kind=stock&symbol=${encodeURIComponent(sel.t)}&name=${encodeURIComponent(sel.n||"")}`;
+    fetch(url,{cache:"no-store"}).then(r=>r.json()).then(j=>{ if(alive){ setInfo(j||{}); setInfoLoading(false); } })
+      .catch(()=>{ if(alive){ setInfo({}); setInfoLoading(false); } });
+    return ()=>{ alive=false; };
+  },[sel]);
 
   const eff=(s)=>({...s, p: liveData[s.t]?.p ?? null, c: liveData[s.t]?.c ?? s.c});
   const q=search.toLowerCase();
@@ -346,6 +358,12 @@ export default function Page(){
         .mprice{display:flex;align-items:baseline;gap:12px;}
         .mprice .pp{font-family:'Sora';font-weight:800;font-size:36px;}
         .mnews-t{font-family:'Sora';font-weight:600;font-size:14px;margin:22px 0 12px;display:flex;align-items:center;gap:9px;}
+        .abouttxt{font-size:13.5px;line-height:1.6;color:var(--mut);}
+        .morelink{color:var(--gold);white-space:nowrap;font-weight:600;}
+        .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
+        .stat{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;}
+        .stat .sl{font-size:11px;color:var(--mut);}
+        .stat .sv{font-size:14px;font-weight:600;margin-top:3px;font-family:'JetBrains Mono';word-break:break-word;}
         .chartbox{margin-top:16px;}
         .chartwrap{position:relative;height:130px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);padding:12px;overflow:hidden;}
         .chartsvg{width:100%;height:100%;display:block;}
@@ -501,8 +519,36 @@ export default function Page(){
                 <span className={`chg ${selEff.c>=0?"u":"dn"}`}>{selEff.c>=0?"▲":"▼"} {Math.abs(selEff.c).toFixed(2)}%</span>
               </div>
               <ChartBox points={hist} loading={histLoading} kind={selEff.coin?"coin":"stock"} range={histRange} onRange={setHistRange}/>
-              <div className="mnews-t">{selEff.coin?"Om":"Seneste nyheder"} {modalNews && modalNews.length>0 && <span className="liveb">LIVE</span>}</div>
-              {selEff.coin && <div className="nm2" style={{color:"var(--mut)",fontSize:13}}>Live pris i USD med ændring over de seneste 24 timer.</div>}
+
+              {infoLoading && <div className="nm2" style={{color:"var(--mut)",fontSize:13,marginTop:16}}>Henter info…</div>}
+              {info && info.desc && (<>
+                <div className="mnews-t">Om {selEff.n}</div>
+                <p className="abouttxt">{info.desc} {info.web && <a className="morelink" href={info.web} target="_blank" rel="noreferrer">Mere →</a>}</p>
+              </>)}
+              {info && info.stats && (()=>{
+                const s=info.stats;
+                const rows = selEff.coin ? [
+                  ["Markedsværdi", s.marketCap!=null?("$"+fmtCap(s.marketCap)):null],
+                  ["Rang", s.rank!=null?("#"+s.rank):null],
+                  ["All-time high", s.ath!=null?("$"+fmtP(s.ath)):null],
+                  ["Cirkulerende", s.circulating!=null?fmtCap(s.circulating):null],
+                  ["Maks udbud", s.total!=null?fmtCap(s.total):null],
+                  ["Lanceret", s.genesis||null],
+                ] : [
+                  ["Markedsværdi", s.marketCap!=null?("$"+fmtCap(s.marketCap)):null],
+                  ["P/E", s.pe!=null?Number(s.pe).toFixed(1):null],
+                  ["52u høj", s.high52!=null?("$"+fmtP(s.high52)):null],
+                  ["52u lav", s.low52!=null?("$"+fmtP(s.low52)):null],
+                  ["Hovedkvarter", s.hq||null],
+                  ["Børs", s.exchange||null],
+                  ["Branche", s.industry||null],
+                  ["Børsnoteret", s.ipo||null],
+                ];
+                const valid=rows.filter(r=>r[1]!=null && r[1]!=="");
+                return valid.length?(<div className="statgrid">{valid.map(([k,v])=>(<div className="stat" key={k}><div className="sl">{k}</div><div className="sv">{v}</div></div>))}</div>):null;
+              })()}
+
+              {!selEff.coin && <div className="mnews-t">Seneste nyheder {modalNews && modalNews.length>0 && <span className="liveb">LIVE</span>}</div>}
               {!selEff.coin && !modalNews && <div className="nm2" style={{color:"var(--mut)",fontSize:13}}>Henter nyheder…</div>}
               {!selEff.coin && modalNews && modalNews.length===0 && <div className="nm2" style={{color:"var(--mut)",fontSize:13}}>Ingen nyheder lige nu.</div>}
               {!selEff.coin && (modalNews||[]).map((nw,i)=>{
