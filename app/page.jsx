@@ -109,6 +109,10 @@ export default function Page(){
   const [clock,setClock]=useState(null);
   const [tape,setTape]=useState([]);
   const [marketNews,setMarketNews]=useState(null);
+  const [chatOpen,setChatOpen]=useState(false);
+  const [chatMsgs,setChatMsgs]=useState([{role:"assistant",content:"Hej! Jeg er GLØD AI 🤖 Spørg mig om en aktie eller coin — fx \"Hvad er Nvidia, og hvad er deres plan?\" eller \"Forklar Bitcoin\"."}]);
+  const [chatInput,setChatInput]=useState("");
+  const [chatLoading,setChatLoading]=useState(false);
 
   useEffect(()=>{ setClock(new Date()); const id=setInterval(()=>setClock(new Date()),1000); return ()=>clearInterval(id); },[]);
   useEffect(()=>{
@@ -138,6 +142,8 @@ export default function Page(){
       .then(j=>{ if(alive) setMarketNews(j.news||[]); }).catch(()=>{ if(alive) setMarketNews([]); });
     return ()=>{ alive=false; };
   },[]);
+
+  useEffect(()=>{ const el=document.getElementById("aibody"); if(el) el.scrollTop=el.scrollHeight; },[chatMsgs,chatLoading,chatOpen]);
 
   const sectors=useMemo(()=>{ const m={};
     ALL.forEach(s=>{ (m[s.s]=m[s.s]||[]).push(s); });
@@ -209,6 +215,18 @@ export default function Page(){
   function goHome(){ setSectorFilter(null); setFilter("alle"); setSearch(""); window.scrollTo({top:0}); }
   function refresh(){ if(sectorFilter) loadQuotes(ALL.filter(s=>s.s===sectorFilter)); }
 
+  async function sendChat(){
+    const text=chatInput.trim(); if(!text||chatLoading) return;
+    const next=[...chatMsgs,{role:"user",content:text}];
+    setChatMsgs(next); setChatInput(""); setChatLoading(true);
+    try{
+      const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:next}),cache:"no-store"});
+      const j=await r.json();
+      setChatMsgs(m=>[...m,{role:"assistant",content:j.reply||"…"}]);
+    }catch(e){ setChatMsgs(m=>[...m,{role:"assistant",content:"Der opstod en fejl. Prøv igen."}]); }
+    setChatLoading(false);
+  }
+
   const showingList = sectorFilter || search;
 
   return (
@@ -260,7 +278,7 @@ export default function Page(){
         .bigsearch input:focus{border-color:var(--gold);}
         .sec{max-width:1180px;margin:0 auto;padding:24px 22px 40px;}
         .sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
-        .sec-t{font-family:'Sora';font-weight:700;font-size:22px;letter-spacing:-.4px;display:flex;align-items:center;gap:10px;}
+        .sec-t{font-family:'Sora';font-weight:700;font-size:22px;letter-spacing:-.4px;}
         .sec-d{color:var(--mut);font-size:13px;margin-top:4px;}
         .seg{display:flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;}
         .seg button{background:var(--panel);border:none;color:var(--mut);padding:9px 15px;font-size:13px;cursor:pointer;font-family:inherit;transition:.18s;}
@@ -343,6 +361,20 @@ export default function Page(){
         .nrow .nt{font-size:13.5px;line-height:1.45;font-weight:500;}
         .nrow .nm2{font-size:11px;color:var(--mut);margin-top:5px;}
         footer{max-width:1180px;margin:20px auto 0;padding:26px 22px 50px;border-top:1px solid var(--line);color:var(--mut);font-size:12px;line-height:1.7;}
+        .aifab{position:fixed;right:18px;bottom:18px;z-index:90;width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1305;font-size:23px;font-weight:700;box-shadow:0 10px 30px -8px rgba(245,166,35,.7);transition:transform .2s;}
+        .aifab:hover{transform:scale(1.07);}
+        .aiwin{position:fixed;right:18px;bottom:88px;z-index:90;width:min(380px,calc(100vw - 36px));height:min(560px,70vh);background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px -20px rgba(0,0,0,.9);animation:pop .25s cubic-bezier(.2,.8,.2,1);}
+        .aihead{display:flex;align-items:center;gap:9px;padding:15px 17px;border-bottom:1px solid var(--line);font-family:'Sora';font-weight:700;font-size:15px;}
+        .aidot{width:9px;height:9px;border-radius:50%;background:var(--up);box-shadow:0 0 8px var(--up);}
+        .aibody{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:11px;}
+        .aimsg{max-width:86%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;}
+        .aimsg.user{align-self:flex-end;background:var(--gold);color:#1a1305;border-bottom-right-radius:4px;}
+        .aimsg.assistant{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-bottom-left-radius:4px;}
+        .aiinput{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);}
+        .aiinput input{flex:1;background:var(--bg);border:1px solid var(--line);color:var(--txt);padding:11px 13px;border-radius:11px;font-size:14px;font-family:inherit;outline:none;}
+        .aiinput input:focus{border-color:var(--gold);}
+        .aiinput button{background:var(--gold);color:#1a1305;border:none;padding:0 16px;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;}
+        .aiinput button:disabled{opacity:.5;}
         @media (max-width:640px){.clock{display:none;}.secgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}}
       `}</style>
 
@@ -479,6 +511,21 @@ export default function Page(){
                 return nw.url ? <a key={i} href={nw.url} target="_blank" rel="noreferrer">{inner}</a> : inner;
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      <button className="aifab" onClick={()=>setChatOpen(o=>!o)} aria-label="GLØD AI">{chatOpen?"✕":"✦"}</button>
+      {chatOpen && (
+        <div className="aiwin">
+          <div className="aihead"><span className="aidot"/> GLØD AI <span style={{marginLeft:"auto",fontSize:11,color:"var(--mut)",fontWeight:400}}>Markedsassistent</span></div>
+          <div className="aibody" id="aibody">
+            {chatMsgs.map((m,i)=>(<div key={i} className={`aimsg ${m.role}`}>{m.content}</div>))}
+            {chatLoading && <div className="aimsg assistant" style={{display:"flex",alignItems:"center",gap:8}}><span className="spin2"/> tænker…</div>}
+          </div>
+          <div className="aiinput">
+            <input value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>{ if(e.key==="Enter") sendChat(); }} placeholder="Spørg om en aktie eller coin…" />
+            <button onClick={sendChat} disabled={chatLoading}>Send</button>
           </div>
         </div>
       )}
