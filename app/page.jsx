@@ -364,9 +364,11 @@ export default function Page(){
       )}
 
       <footer>
-        <strong style={{color:"var(--txt)"}}>GLØD MARKETS</strong> · Aktiekurser via Finnhub, coins via CoinGecko. Priser kan være forsinkede.
-        Intet på denne side udgør investeringsrådgivning.
+        <div style={{color:"var(--txt)",fontWeight:700,letterSpacing:1,fontFamily:"'Sora'"}}>GLØD MARKETS</div>
+        <div style={{marginTop:8,maxWidth:"60ch"}}>Aktie- og kryptokurser i realtid, opdateret løbende gennem hele handelsdagen. Alle priser er vejledende og kan være forsinkede. Intet på denne side udgør investeringsrådgivning.</div>
+        <div style={{marginTop:16,opacity:.7}}>© {clock?clock.getFullYear():2026} GLØD MARKETS · Hjemmeside udviklet af Adam Mehdi Ben Hassine</div>
       </footer>
+
 
       {selEff && (
         <div className="ov" onClick={()=>setSel(null)}>
