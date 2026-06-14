@@ -357,6 +357,14 @@ export default function Page(){
         .mbody{padding:20px 22px 24px;}
         .mprice{display:flex;align-items:baseline;gap:12px;}
         .mprice .pp{font-family:'Sora';font-weight:800;font-size:36px;}
+        .tradebar{display:flex;gap:10px;margin-top:18px;}
+        .tradebar a{flex:1;text-align:center;padding:14px;border-radius:13px;font-weight:700;font-size:15px;font-family:'Sora';transition:transform .15s,filter .15s;}
+        .tradebar a:active{transform:scale(.98);}
+        .tbuy{background:linear-gradient(135deg,var(--up),#1fb86e);color:#06231a;}
+        .tbuy:hover{filter:brightness(1.07);}
+        .tsell{background:var(--panel2);border:1px solid var(--line);color:var(--txt);}
+        .tsell:hover{border-color:var(--down);color:var(--down);}
+        .tradenote{font-size:11px;color:var(--mut);margin-top:9px;line-height:1.5;}
         .mnews-t{font-family:'Sora';font-weight:600;font-size:14px;margin:22px 0 12px;display:flex;align-items:center;gap:9px;}
         .abouttxt{font-size:13.5px;line-height:1.6;color:var(--mut);}
         .morelink{color:var(--gold);white-space:nowrap;font-weight:600;}
@@ -518,6 +526,11 @@ export default function Page(){
                 <span className="pp mono">{selEff.p!=null?fmtP(selEff.p):"—"}</span>
                 <span className={`chg ${selEff.c>=0?"u":"dn"}`}>{selEff.c>=0?"▲":"▼"} {Math.abs(selEff.c).toFixed(2)}%</span>
               </div>
+              <div className="tradebar">
+                <a className="tbuy" href={`https://www.etoro.com/markets/${selEff.t.toLowerCase()}`} target="_blank" rel="noreferrer">Køb {selEff.t}</a>
+                <a className="tsell" href={`https://www.etoro.com/markets/${selEff.t.toLowerCase()}`} target="_blank" rel="noreferrer">Sælg</a>
+              </div>
+              <div className="tradenote">Handel sker hos eToro — en ekstern, reguleret mægler. GLØD MARKETS udfører ikke selv handler.</div>
               <ChartBox points={hist} loading={histLoading} kind={selEff.coin?"coin":"stock"} range={histRange} onRange={setHistRange}/>
 
               {infoLoading && <div className="nm2" style={{color:"var(--mut)",fontSize:13,marginTop:16}}>Henter info…</div>}
