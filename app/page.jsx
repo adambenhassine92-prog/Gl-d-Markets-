@@ -315,17 +315,31 @@ export default function Page(){
 
       {!showingList ? (
         <>
-          <section className="hero">
+                 <section className="hero">
             <div className="hero-bg"><div className="grid-lines"/></div>
             <div className="hero-in">
               <div className="eyebrow">Markedsintelligens · Realtid</div>
-              <h1 className="h1">Hele markedet i én <span className="gl">app</span>.</h1>
-              <p className="sub">{ALL.length} aktier og coins fordelt på sektorer. Tryk på en sektor eller søg efter et hvilket som helst symbol — live priser hentes med det samme.</p>
+              <h1 className="h1">Følg markederne <span className="gl">som en professionel</span>.</h1>
+              <p className="sub">Aktier og krypto samlet ét sted — med live kurser, interaktive grafer og de seneste nyheder. Alt opdateres i realtid, så du altid er et skridt foran markedet.</p>
+              <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:26}}>
+                {[[`${ALL.length}`,"Markeder"],[`${sectors.length}`,"Sektorer"],[`${COINS.length}`,"Coins"],["24/7","Opdatering"]].map(([v,l])=>(
+                  <div key={l} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:14,padding:"12px 18px",minWidth:92}}>
+                    <div style={{fontFamily:"'Sora'",fontWeight:800,fontSize:22,lineHeight:1,color:"var(--gold)"}}>{v}</div>
+                    <div style={{fontSize:12,color:"var(--mut)",marginTop:5,letterSpacing:.4}}>{l}</div>
+                  </div>
+                ))}
+              </div>
               <div className="bigsearch">
                 <input placeholder="Søg aktie eller coin (fx NVDA, BTC, Tesla)…" value={search} onChange={(e)=>setSearch(e.target.value)} />
               </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:18}}>
+                {["Realtidskurser","Interaktive grafer","Markedsnyheder","Søg alle symboler"].map(f=>(
+                  <span key={f} style={{fontSize:12.5,color:"var(--mut)",background:"var(--panel2)",border:"1px solid var(--line)",padding:"7px 13px",borderRadius:20}}>✓ {f}</span>
+                ))}
+              </div>
             </div>
           </section>
+
 
           <section className="sec">
             <Reveal><div className="sec-h"><div><div className="sec-t">Sektorer</div><div className="sec-d">Tryk for at åbne en sektor med live priser</div></div></div></Reveal>
