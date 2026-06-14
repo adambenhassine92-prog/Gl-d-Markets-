@@ -13,4 +13,20 @@ export async function GET() {
   }
   const quotes = {};
   await Promise.all(
-    SYMBOLS.map(async (sym)
+    SYMBOLS.map(async (sym) => {
+      try {
+        const r = await fetch(
+          `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${key}`,
+          { cache: "no-store" }
+        );
+        const q = await r.json();
+        if (q && typeof q.c === "number" && q.c > 0) {
+          quotes[sym] = { p: q.c, c: typeof q.dp === "number" ? q.dp : 0 };
+        }
+      } catch (e) {
+        /* skip this symbol */
+      }
+    })
+  );
+  return Response.json({ quotes });
+}
