@@ -1,4 +1,4 @@
- "use client";
+"use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { STOCKS, COINS } from "./stocks";
 
@@ -403,14 +403,15 @@ export default function Page(){
         .aiinput input:focus{border-color:var(--gold);}
         .aiinput button{background:var(--gold);color:#1a1305;border:none;padding:0 16px;border-radius:11px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;}
         .aiinput button:disabled{opacity:.5;}
-        @media (min-width:1200px){
-          .hero,.sec,.secpage,footer{max-width:1340px;}
-          .hero{padding-top:84px;}
-          .h1{font-size:62px;}
-          .sub{font-size:18px;max-width:62ch;}
-          .sec-t{font-size:26px;}
-          .cards{grid-template-columns:repeat(auto-fill,minmax(330px,1fr));}
-          .secgrid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+        @media (min-width:1000px){
+          .hero,.sec,.secpage{max-width:1480px;padding-left:40px;padding-right:40px;}
+          footer{max-width:1480px;}
+          .hero{padding-top:90px;padding-bottom:48px;}
+          .h1{font-size:66px;}
+          .sub{font-size:19px;max-width:64ch;}
+          .sec-t{font-size:27px;}
+          .cards{grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;}
+          .secgrid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
         }
         @media (max-width:640px){.clock{display:none;}.secgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}}
       `}</style>
