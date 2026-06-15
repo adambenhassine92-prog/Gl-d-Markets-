@@ -268,6 +268,8 @@ export default function Page(){
         .bname small{color:var(--gold);}
         .navr{display:flex;align-items:center;gap:14px;}
         .clock{font-size:12px;color:var(--mut);}
+        .navlink{font-size:13px;color:var(--mut);border:1px solid var(--line);padding:7px 13px;border-radius:9px;transition:.2s;}
+        .navlink:hover{color:var(--gold);border-color:var(--gold);}
         .ref{background:none;border:1px solid var(--line);color:var(--mut);height:34px;padding:0 13px;border-radius:9px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:7px;font-family:inherit;transition:.2s;}
         .ref:hover{color:var(--gold);border-color:var(--gold);}
         .ref .ic{display:inline-block;transition:transform .6s;}
@@ -409,6 +411,7 @@ export default function Page(){
       <div className="nav">
         <div className="brand" onClick={goHome}><div className="gdot"/><div className="bname">GLØD<small>·</small>MARKETS</div></div>
         <div className="navr">
+          <a href="/guides" className="navlink">Guides</a>
           {live && <span className="livepill"><span className="b"/>Live</span>}
           {clock && <span className="clock mono">{clock.toLocaleTimeString("da-DK")}</span>}
           {sectorFilter && <button className={`ref ${loading?"spin":""}`} onClick={refresh} disabled={loading}><span className="ic">↻</span>{loading?"Henter":"Opdater"}</button>}
